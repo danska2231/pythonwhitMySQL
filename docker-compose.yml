@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  mi_base_datos:
+    image: mysql:8.0
+    container_name: contenedor_mysql_moderno
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: tienda_prueba
+    ports:
+      - "3307:3306"
+    volumes:
+      - datos_mysql:/var/lib/mysql
+
+volumes:
+  datos_mysql:
