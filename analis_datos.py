@@ -1,34 +1,31 @@
+import os
 import pandas as pd
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-# 1. Creamos la conexión al contenedor de Docker usando SQLAlchemy
-# Formato: mysql+pymysql://usuario:password@host:puerto/base_de_datos
-# Usa el puerto 3307 si cambiaste el puerto en tu docker-compose, o 3306 si liberaste el puerto.
-engine = create_engine("mysql+pymysql://root:12345@127.0.0.1:3307/tienda_prueba")
+# Cargamos el archivo secreto
+load_dotenv()
 
-try:
-    # 2. Tu fuerte: la consulta SQL
-    query = "SELECT producto, cantidad, precio_unitario FROM ventas"
+# Jalamos las variables
+host = os.getenv("DB_HOST")
+port = os.getenv("DB_PORT")
+password = os.getenv("DB_PASSWORD")
+database = os.getenv("DB_NAME")
 
-    # 3. ¡La magia de Pandas! Lee directamente desde el motor de base de datos
-    df = pd.read_sql(query, con=engine)
+# Armamos la conexión limpia
+engine = create_engine(f"mysql+pymysql://root:{password}@{host}:{port}/{database}")
 
-    print("--- 1. DATOS CARGADOS EN UN DATAFRAME DE PANDAS ---")
-    print(df)
-    print("\n---------------------------------------------------")
+# Ejecutamos la consulta
+df = pd.read_sql("SELECT producto, cantidad, precio_unitario FROM ventas", con=engine)
+# --- LIMPIEZA DE DATOS ---
+# Si hay alguna fila donde no exista nombre de producto, la borramos
+df = df.dropna(subset=['producto'])
 
-    # 4. CIENCIA DE DATOS / PROCESAMIENTO RÁPIDO
-    # Creamos una columna calculada al vuelo multiplicando dos columnas existentes
-    df['total_venta'] = df['cantidad'] * df['precio_unitario']
+# Si por error alguien puso cantidad menor a 1, la corregimos a 1
+df.loc[df['cantidad'] < 1, 'cantidad'] = 1
 
-    print("--- 2. DATAFRAME CON NUEVA COLUMNA DE TOTALES ---")
-    print(df)
-    print("\n---------------------------------------------------")
+df['total_venta'] = df['cantidad'] * df['precio_unitario']
 
-    # 5. EXPORTACIÓN AUTOMÁTICA
-    # Guardamos el resultado procesado en un archivo Excel real en tu carpeta
-    df.to_excel("reporte_final_ventas.xlsx", index=False)
-    print("¡Reporte 'reporte_final_ventas.xlsx' generado con éxito!")
-
-except Exception as e:
-    print(f"Ocurrió un error en el análisis: {e}")
+# Exportamos a Excel
+df.to_excel("reporte_final_ventas.xlsx", index=False)
+print("¡Reporte generado de forma segura!") 
