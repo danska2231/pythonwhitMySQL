@@ -23,7 +23,7 @@ df = df.dropna(subset=['producto'])
 
 # Si por error alguien puso cantidad menor a 1, la corregimos a 1
 df.loc[df['cantidad'] < 1, 'cantidad'] = 1
-
+    
 df['total_venta'] = df['cantidad'] * df['precio_unitario']
 
 # Exportamos a Excel
